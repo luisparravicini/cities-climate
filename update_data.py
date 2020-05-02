@@ -31,16 +31,7 @@ class Cache:
         return data
 
     def get_json(self, session, url, params={}):
-        cache_object_path = self._path_for(url, params)
-        if cache_object_path.exists():
-            return json.loads(self._read(cache_object_path))
-
-        res = session.get(url=url, params=params)
-        res.raise_for_status()
-        data = res.text
-
-        self._save(cache_object_path, data)
-
+        data = self.get(session, url, params)
         return json.loads(data)
 
     def _read(self, path):
@@ -100,8 +91,8 @@ for city in cities:
 
     print('.', end='', flush=True)
     data = cache.get(session, url)
+    # soup = BeautifulSoup(html_doc, 'html.parser')
     print("\x08o", end='', flush=True)
 
-    # soup = BeautifulSoup(html_doc, 'html.parser')
 
     print("]")
