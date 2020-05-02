@@ -4,6 +4,8 @@ import requests
 from pathlib import Path
 import hashlib
 import json
+import re
+import mpu
 
 
 def read_cities_list(path):
@@ -74,8 +76,47 @@ def find_city_url(session, cache, city):
     return results[0][1] if (len(results) > 0) else None
 
 
-cache = Cache('~/download.cache')
+regions = list()
+with open('Koeppen-Geiger-ASCII.txt') as file:
+    # header
+    file.readline()
+    for _, line in enumerate(file):
+        datum = re.findall(r'\S+', file.readline())
+        datum[0] = float(datum[0])
+        datum[1] = float(datum[1])
+
+        datum = ((datum[0], datum[1]), datum[2])
+        regions.append(datum)
+
+print(len(regions), 'regions')
 cities = read_cities_list('simplemaps_worldcities_basicv1.6/worldcities.csv')
+
+path = Path('cities.json')
+if path.exists():
+    with open('cities.json') as file:
+        cities = json.load(file)
+
+for index, city in enumerate(cities):
+    if 'koppen' in city:
+        continue
+
+    city_pos = (float(city['lat']), float(city['lng']))
+    nearest = min(regions,
+                  key=lambda x: mpu.haversine_distance(city_pos, x[0]))
+
+    city['koppen'] = nearest[1]
+    print(city['city'], city['koppen'], ' (%.2f%%)' % (100 * float(index) / len(cities)))
+
+    if index % 100 == 0:
+        print("\nsaving\n")
+        with open('cities.json', 'w') as file:
+            json.dump(cities, file)
+
+with open('cities.json', 'w') as file:
+    json.dump(cities, file)
+
+
+cache = Cache('~/download.cache')
 print(len(cities), 'cities')
 session = requests.Session()
 for city in cities:
@@ -91,7 +132,8 @@ for city in cities:
 
     print('.', end='', flush=True)
     data = cache.get(session, url)
-    # soup = BeautifulSoup(html_doc, 'html.parser')
+    # print(cache._path_for(url, {}))
+    # soup = BeautifulSoup(data, 'html.parser')
     print("\x08o", end='', flush=True)
 
 
