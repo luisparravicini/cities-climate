@@ -44,8 +44,8 @@ for index, city in cities_df.iterrows():
 
     if index > 0 and index % 50 == 0:
         bar.message = '(saving)'.ljust(30)
-        cities_df.to_csv(cities_path)
+        cities_df.to_csv(cities_path, index_label=False)
 
-cities_df.save_csv(cities_path)
+cities_df.to_csv(cities_path, index_label=False)
 
 bar.finish()
