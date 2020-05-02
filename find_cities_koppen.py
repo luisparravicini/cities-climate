@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import re
 import mpu
+from progress.bar import IncrementalBar
 
 
 def read_cities_list(path):
@@ -11,7 +12,7 @@ def read_cities_list(path):
         reader = csv.DictReader(file)
         return list(reader)
 
-"city","city_ascii","lat","lng","country","population"
+# "city","city_ascii","lat","lng","country","population"
 
 regions = list()
 with open('Koeppen-Geiger-ASCII.txt') as file:
@@ -26,7 +27,9 @@ with open('Koeppen-Geiger-ASCII.txt') as file:
         regions.append(datum)
 
 print(len(regions), 'regions')
-df = pd.csv('simplemaps_worldcities_basicv1.6/worldcities.csv')
+
+df = pd.read_csv('simplemaps_worldcities_basicv1.6/worldcities.csv')
+# df = pd.DataFrame()
 print(len(df))
 cities = read_cities_list('simplemaps_worldcities_basicv1.6/worldcities.csv')
 
@@ -35,7 +38,10 @@ if path.exists():
     with open('cities.json') as file:
         cities = json.load(file)
 
+bar = IncrementalBar('City', max=len(cities))
 for index, city in enumerate(cities):
+    bar.message = city['city'][0:30].ljust(30)
+    bar.next()
     if 'koppen' in city:
         continue
 
@@ -44,12 +50,14 @@ for index, city in enumerate(cities):
                   key=lambda x: mpu.haversine_distance(city_pos, x[0]))
 
     city['koppen'] = nearest[1]
-    print(city['city'], city['koppen'], ' (%.2f%%)' % (100 * float(index) / len(cities)))
+    # print(city['city'], city['koppen'], ' (%.2f%%)' % (100 * float(index) / len(cities)))
 
-    if index % 100 == 0:
-        print("\nsaving\n")
+    if index % 50 == 0:
+        bar.message = '(saving)'.ljust(30)
         with open('cities.json', 'w') as file:
             json.dump(cities, file)
 
 with open('cities.json', 'w') as file:
     json.dump(cities, file)
+
+bar.finish()
