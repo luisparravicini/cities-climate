@@ -1,63 +1,51 @@
 import csv
-from pathlib import Path
-import json
-import pandas as pd
 import re
 import mpu
+import pandas as pd
+from pathlib import Path
 from progress.bar import IncrementalBar
 
 
-def read_cities_list(path):
-    with open(path) as file:
-        reader = csv.DictReader(file)
-        return list(reader)
-
-# "city","city_ascii","lat","lng","country","population"
-
 regions = list()
-with open('Koeppen-Geiger-ASCII.txt') as file:
+with open('data/Koeppen-Geiger-ASCII.txt') as file:
     # header
     file.readline()
+
     for _, line in enumerate(file):
         datum = re.findall(r'\S+', file.readline())
-        datum[0] = float(datum[0])
-        datum[1] = float(datum[1])
-
-        datum = ((datum[0], datum[1]), datum[2])
-        regions.append(datum)
+        regions.append((
+            (float(datum[0]), float(datum[1])),
+            datum[2]))
 
 print(len(regions), 'regions')
 
-df = pd.read_csv('simplemaps_worldcities_basicv1.6/worldcities.csv')
-# df = pd.DataFrame()
-print(len(df))
-cities = read_cities_list('simplemaps_worldcities_basicv1.6/worldcities.csv')
+cities_path = Path('cities.csv')
+if cities_path.exists():
+    cities_df = pd.read_csv(cities_path)
+else:
+    cities_df = pd.read_csv('data/worldcities.csv')
+    cities_df = cities_df[['city', 'city_ascii', 'lat', 'lng', 'country', 'population']]
 
-path = Path('cities.json')
-if path.exists():
-    with open('cities.json') as file:
-        cities = json.load(file)
+print(len(cities_df), 'cities')
+print()
 
-bar = IncrementalBar('City', max=len(cities))
-for index, city in enumerate(cities):
+bar = IncrementalBar('City', max=len(cities_df))
+for index, city in cities_df.iterrows():
     bar.message = city['city'][0:30].ljust(30)
     bar.next()
     if 'koppen' in city:
         continue
 
-    city_pos = (float(city['lat']), float(city['lng']))
+    city_pos = (city['lat'], city['lng'])
     nearest = min(regions,
                   key=lambda x: mpu.haversine_distance(city_pos, x[0]))
 
     city['koppen'] = nearest[1]
-    # print(city['city'], city['koppen'], ' (%.2f%%)' % (100 * float(index) / len(cities)))
 
-    if index % 50 == 0:
+    if index > 0 and index % 50 == 0:
         bar.message = '(saving)'.ljust(30)
-        with open('cities.json', 'w') as file:
-            json.dump(cities, file)
+        cities_df.to_csv(cities_path)
 
-with open('cities.json', 'w') as file:
-    json.dump(cities, file)
+cities_df.save_csv(cities_path)
 
 bar.finish()
