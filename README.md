@@ -5,9 +5,9 @@ To do this it uses a "world map" divided in 0.5 degree zones and finds the neare
 
 Install dependencies:
 
-`pip install --user requeriments.txt`
+`pip install --user -r requeriments.txt`
 
-Download data files (the ones listed in *Data Sources*) and put them in `data/`
+Download the data files (the ones listed in *Data Sources*) and put them in `data/`
 
 Run the script:
 
