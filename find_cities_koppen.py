@@ -1,23 +1,25 @@
 import csv
 import re
-import mpu
 import pandas as pd
 from pathlib import Path
 from progress.bar import IncrementalBar
 
 
-regions = list()
+regions = dict()
 with open('data/Koeppen-Geiger-ASCII.txt') as file:
     # header
     file.readline()
 
     for _, line in enumerate(file):
         datum = re.findall(r'\S+', file.readline())
-        regions.append((
-            (float(datum[0]), float(datum[1])),
-            datum[2]))
+        lat = float(datum[0])
+        lng = float(datum[1])
+        koppen = datum[2]
 
-print(len(regions), 'regions')
+        if lat not in regions:
+            regions[lat] = dict()
+
+        regions[lat][lng] = koppen
 
 cities_path = Path('cities.csv')
 if cities_path.exists():
@@ -25,6 +27,7 @@ if cities_path.exists():
 else:
     cities_df = pd.read_csv('data/worldcities.csv')
     cities_df = cities_df[['city', 'city_ascii', 'lat', 'lng', 'country', 'population']]
+    cities_df
 
 print(len(cities_df), 'cities')
 print()
@@ -37,12 +40,20 @@ for index, city in cities_df.iterrows():
         continue
 
     city_pos = (city['lat'], city['lng'])
-    nearest = min(regions,
-                  key=lambda x: mpu.haversine_distance(city_pos, x[0]))
+    # the "correct way" would be to calculate the Haversine distance
+    # between the two points, but as there is a grid 0.5 degree, I assume
+    # the error should be mininum (and it's faster with this dict of dicts)
+    # than using haversine for all cells
+    # mpu.haversine_distance(city_pos, x[0]))
 
-    city['koppen'] = nearest[1]
+    nearest_lat = min(regions,
+                  key=lambda x: abs(city_pos[0] - x))
+    nearest_lng = min(regions[nearest_lat],
+                  key=lambda x: abs(city_pos[1] - x))
 
-    if index > 0 and index % 50 == 0:
+    cities_df.loc[index, 'koppen'] = regions[nearest_lat][nearest_lng]
+
+    if index > 0 and index % 1000 == 0:
         bar.message = '(saving)'.ljust(30)
         cities_df.to_csv(cities_path, index_label=False)
 
