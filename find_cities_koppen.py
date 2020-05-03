@@ -41,7 +41,7 @@ for index, city in cities_df.iterrows():
 
     city_pos = (city['lat'], city['lng'])
     # the "correct way" would be to calculate the Haversine distance
-    # between the two points, but as there is a grid 0.5 degree, I assume
+    # between the two points, but as there is a 0.5 degree grid, I assume
     # the error should be mininum (and it's faster with this dict of dicts)
     # than using haversine for all cells
     # mpu.haversine_distance(city_pos, x[0]))
