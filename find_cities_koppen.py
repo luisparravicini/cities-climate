@@ -36,7 +36,7 @@ bar = IncrementalBar('City', max=len(cities_df))
 for index, city in cities_df.iterrows():
     bar.message = city['city'][0:30].ljust(30)
     bar.next()
-    if 'koppen' in city:
+    if not pd.isna(city['koppen']):
         continue
 
     city_pos = (city['lat'], city['lng'])
