@@ -27,7 +27,7 @@ if cities_path.exists():
 else:
     cities_df = pd.read_csv('data/worldcities.csv')
     cities_df = cities_df[['city', 'city_ascii', 'lat', 'lng', 'country', 'population']]
-    cities_df
+    cities_df['koppen'] = None
 
 print(len(cities_df), 'cities')
 print()
