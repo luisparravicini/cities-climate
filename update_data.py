@@ -92,8 +92,35 @@ for _, city in cities_df.iterrows():
     if url is None:
         continue
 
-    data = cache.get(session, url)
-    # print(cache._path_for(url, {}))
-    # soup = BeautifulSoup(data, 'html.parser')
+    params = {'action': 'raw'}
+    data = cache.get(session, url, params)
+    # print(cache._path_for(url, params))
+
+    data = data.split("\n")
+    values = dict()
+    for line in data:
+        # print(line)
+        match = re.match(r'\| elevation_(\S+)\s*=\s*([\d,]+)', line)
+        if match is None:
+            continue
+
+        parts = match[1].split('_')
+        if len(parts) > 2:
+            print(f'Error parsing elevation for {name}: "{parts}"')
+        value = match[2].replace(',', '')
+        if len(value) == 0:
+            print(f'No elevation value found for: {name}')
+        values[match[1]] = value
+    # print(values)
+
+    in_box = False
+    for line in data:
+        if line.startswith('{{Weather box'):
+            in_box = True
+            continue
+        if line.startswith('}}') and in_box:
+            in_box = False
+            continue
+
 
 bar.finish()
