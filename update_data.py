@@ -114,13 +114,14 @@ for _, city in cities_df.iterrows():
     # print(values)
 
     in_box = False
+    boxes = 0
     for line in data:
         if line.startswith('{{Weather box'):
             in_box = True
+            boxes += 1
             continue
         if line.startswith('}}') and in_box:
             in_box = False
             continue
-
 
 bar.finish()
