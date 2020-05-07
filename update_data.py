@@ -104,14 +104,57 @@ def extract_elevation(data):
     return 0
 
 
+def extract_climate_from_box(data):
+    months = (
+        'year',
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        'yeard',
+        'Jand', 'Febd', 'Mard', 'Aprd', 'Mayd', 'Jund', 'Juld', 'Augd', 'Sepd', 'Octd', 'Novd', 'Decd'
+    )
+    prefix_blacklist = (
+        'unit precipitation days',
+        'unit rain days',
+        'unit snow days',
+        'pages',
+        'page',
+        'time day',
+        'open',
+        'metric first'
+    )
+    first_item_blacklist = (
+        'accessdate', 'access-date', 'archivedate',
+        'width', 'archive-date', 'time day', 'date'
+    )
+    for line in data.split("\n"):
+        line = line.replace('−', '-')
+        match = re.match(r'\s*\|([^=]+)=\s*(-?[\d\.]+)', line, flags=re.IGNORECASE)
+        if match is not None:
+            prefix = match[1].strip()
+            if prefix in prefix_blacklist:
+                continue
+
+            items = match[1].strip().split(' ')
+            value = match[2]
+            first_item = items[0]
+            if first_item in first_item_blacklist:
+                continue
+
+            if first_item not in months:
+                print()
+                print(f'"{match[1]}" "{line}"')
+            # print(match)
+
+
 def extract_climate(data):
     weather_boxes = re.findall(r'\{\{Weather box.*?(?:\n\}\}|\}\}\n)', data, re.DOTALL)
     # for weather in weather_boxes:
     #     print(weather)
     if len(weather_boxes) == 0:
         return 1
-    else:
-        return 0
+
+    for box in weather_boxes:
+        extract_climate_from_box(box)
+    return 0
 
 
 def find_city_url(session, cache, city):
