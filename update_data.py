@@ -48,6 +48,10 @@ class Cache:
         return path
 
 
+def to_meters(feet):
+    return feet * 0.3048
+
+
 def extract_elevation(data):
     values = dict()
     for line in data.split("\n"):
@@ -59,15 +63,45 @@ def extract_elevation(data):
         parts = match[1].split('_')
         if len(parts) > 2:
             print(f'\nError parsing elevation for {name}: "{parts}"')
+            return 0
+
+        if len(parts) == 1:
+            unit = parts[0]
+            key = ''
+            if unit == 'min' or unit == 'max':
+                key = unit
+                unit = 'm'
+        else:
+            key, unit = parts
+
         value = match[2].replace(',', '')
         if len(value) == 0:
             print(f'\nNo elevation value found for: {name}')
-        values[match[1]] = value
-    # print(values)
+            return 0
+
+        if key not in values:
+            values[key] = dict()
+        values[key][unit] = int(value)
+
     if len(values) == 0:
         return 1
-    else:
-        return 0
+
+    elevations = dict()
+    for key, value in values.items():
+        if 'ft' in value:
+            x = int(to_meters(value['ft']))
+        else:
+            if 'm' in value:
+                x = value['m']
+            else:
+                print(values)
+                print(f'Unknown elevation: "{value}"')
+                return 0
+
+        elevations[key] = x
+    # print(elevations)
+
+    return 0
 
 
 def extract_climate(data):
