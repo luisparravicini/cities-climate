@@ -48,6 +48,38 @@ class Cache:
         return path
 
 
+def extract_elevation(data):
+    values = dict()
+    for line in data.split("\n"):
+        # print(line)
+        match = re.match(r'\| elevation_(\S+)\s*=\s*([\d,]+)', line)
+        if match is None:
+            continue
+
+        parts = match[1].split('_')
+        if len(parts) > 2:
+            print(f'\nError parsing elevation for {name}: "{parts}"')
+        value = match[2].replace(',', '')
+        if len(value) == 0:
+            print(f'\nNo elevation value found for: {name}')
+        values[match[1]] = value
+    # print(values)
+    if len(values) == 0:
+        return 1
+    else:
+        return 0
+
+
+def extract_climate(data):
+    weather_boxes = re.findall(r'\{\{Weather box.*?(?:\n\}\}|\}\}\n)', data, re.DOTALL)
+    # for weather in weather_boxes:
+    #     print(weather)
+    if len(weather_boxes) == 0:
+        return 1
+    else:
+        return 0
+
+
 def find_city_url(session, cache, city):
     base_url = "https://en.wikipedia.org/w/api.php"
 
@@ -97,29 +129,8 @@ for _, city in cities_df.iterrows():
     data = cache.get(session, url, params)
     # print(cache._path_for(url, params))
 
-    values = dict()
-    for line in data.split("\n"):
-        # print(line)
-        match = re.match(r'\| elevation_(\S+)\s*=\s*([\d,]+)', line)
-        if match is None:
-            continue
-
-        parts = match[1].split('_')
-        if len(parts) > 2:
-            print(f'\nError parsing elevation for {name}: "{parts}"')
-        value = match[2].replace(',', '')
-        if len(value) == 0:
-            print(f'\nNo elevation value found for: {name}')
-        values[match[1]] = value
-    # print(values)
-    if len(values) == 0:
-        elevation_not_found += 1
-
-    weather_boxes = re.findall(r'\{\{Weather box.*?(?:\n\}\}|\}\}\n)', data, re.DOTALL)
-    if len(weather_boxes) == 0:
-        climate_box_not_found += 1
-    # for weather in weather_boxes:
-    #     print(weather)
+    elevation_not_found += extract_elevation(data)
+    climate_box_not_found += extract_climate(data)
 
 
 bar.finish()
