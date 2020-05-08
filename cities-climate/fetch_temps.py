@@ -16,10 +16,14 @@ def fetch_cities_data(cache, session, url):
     data = list()
 
     url += '&set=metric'
+
     page_content = cache.get(session, url)
     # need to use html5lib as the html is malformed and
     # it needs a more lenient parser than the default one
     soup = BeautifulSoup(page_content, 'html5lib')
+
+    # or state if inside USA
+    country = soup.find('h1').text.split('-')[-1].strip().capitalize()
 
     table = soup.find('div', {'id': 'left-content'}).find('table')
     for row in table.find_all('tr')[1:]:
@@ -27,7 +31,8 @@ def fetch_cities_data(cache, session, url):
         if len(cells) != 7:
             continue
 
-        datum = map(lambda x: x.text, cells)
+        datum = list(map(lambda x: x.text, cells))
+        datum.insert(1, country)
         data.append(datum)
 
     return data
@@ -54,13 +59,13 @@ def fetch_month(month, session, cache, min_temp, max_temp):
         match = re.search(r'\((\d+)\)', link.next_sibling)
         n = int(match[1]) if match else 0
 
-        queue.append((href, link.get_text()))
+        queue.append((href, link.get_text(), n))
 
         total += n
 
     bar = IncrementalBar('fetching', max=total)
     while len(queue) > 0:
-        url, name = queue.pop()
+        url, name, amount = queue.pop()
         bar.message = to_bar_message(name)
 
         data = cache.get(session, url)
@@ -74,7 +79,10 @@ def fetch_month(month, session, cache, min_temp, max_temp):
 
             temps = fetch_cities_data(cache, session, href)
 
-            bar.next(len(temps))
+            # next forces the bar to refresh (it's needed for the message)
+            bar.next(0)
+
+        bar.next(amount)
 
     bar.finish()
 
