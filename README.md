@@ -11,7 +11,7 @@ Download the data files (the ones listed in *Data Sources*) and put them in `dat
 
 Run the script:
 
-`python find_cities_koppen.py`
+`python -m cities-climate.find_cities_koppen`
 
 It initially reads the cities list from `data/` and then it will start saving all the intermediate (and final) data in `cities.csv`.
 
