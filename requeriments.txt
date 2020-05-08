@@ -2,3 +2,4 @@ progress
 requests
 mwparserfromhell
 bs4
+html5lib
