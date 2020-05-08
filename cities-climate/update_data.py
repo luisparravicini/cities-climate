@@ -4,7 +4,7 @@ import hashlib
 import re
 from progress.bar import IncrementalBar
 import mwparserfromhell
-from .cache import Cache
+from .cache import HttpCache
 
 
 def to_meters(feet):
@@ -162,7 +162,7 @@ cities_df = pd.read_csv(cities_path)
 print(len(cities_df), 'cities')
 print()
 
-cache = Cache('~/download.cache')
+cache = HttpCache('~/download-wikipedia.cache')
 session = requests.Session()
 bar = IncrementalBar('City', max=len(cities_df))
 climate_box_not_found = 0

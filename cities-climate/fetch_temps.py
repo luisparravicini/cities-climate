@@ -4,7 +4,7 @@ import re
 import requests
 from progress.bar import IncrementalBar
 import mwparserfromhell
-from .cache import Cache
+from .cache import HttpCache, DataCache
 from urllib.parse import urljoin, urlparse
 
 
@@ -13,9 +13,13 @@ def to_fahrenheit_int(celsius):
 
 
 def fetch_cities_data(cache, session, url):
+    url += '&set=metric'
+
     data = list()
 
-    url += '&set=metric'
+    data_cache = DataCache('weather.cache')
+    if data_cache.has(url):
+        return
 
     page_content = cache.get(session, url)
     # need to use html5lib as the html is malformed and
@@ -35,7 +39,7 @@ def fetch_cities_data(cache, session, url):
         datum.insert(1, country)
         data.append(datum)
 
-    return data
+    data_cache.save_json(url, data)
 
 
 def to_bar_message(s):
@@ -77,7 +81,7 @@ def fetch_month(month, session, cache, min_temp, max_temp):
 
             bar.message = to_bar_message(link.get_text())
 
-            temps = fetch_cities_data(cache, session, href)
+            fetch_cities_data(cache, session, href)
 
             # next forces the bar to refresh (it's needed for the message)
             bar.next(0)
@@ -88,7 +92,7 @@ def fetch_month(month, session, cache, min_temp, max_temp):
 
 
 session = requests.Session()
-cache = Cache('~/download.cache')
+cache = HttpCache('~/download.cache')
 min_temp = to_fahrenheit_int(10)
 max_temp = None
 print(f'collecting cities with temperature range: {min_temp}-{max_temp}')
