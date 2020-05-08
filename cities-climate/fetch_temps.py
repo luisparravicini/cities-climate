@@ -37,7 +37,7 @@ def to_bar_message(s):
     return s[0:30].ljust(30)
 
 
-def fetch_month(month, session, cache):
+def fetch_month(month, session, cache, min_temp, max_temp):
     url = 'https://www.weatherbase.com/vacation/step3.php3'
     params = {'month': month, 'low': min_temp, 'hi': max_temp}
 
@@ -88,5 +88,5 @@ months = ('January', 'February', 'March', 'April',
           'May', 'June', 'July', 'August', 'September',
           'October', 'November', 'December')
 for month in months:
-    fetch_month(month, session, cache)
+    fetch_month(month, session, cache, min_temp, max_temp)
     print()
