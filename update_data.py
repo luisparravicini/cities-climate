@@ -210,6 +210,7 @@ bar = IncrementalBar('City', max=len(cities_df))
 climate_box_not_found = 0
 elevation_not_found = 0
 all_weather_keys = set()
+cities_parsed = 0
 for _, city in cities_df.iterrows():
     name = city['city']
     bar.message = name[0:30].ljust(30)
@@ -219,8 +220,8 @@ for _, city in cities_df.iterrows():
     if not koppen.startswith('C'):
         continue
 
-    if city['country'] == 'United States':
-        continue
+    # if city['country'] == 'United States':
+    #     continue
 
     url = find_city_url(session, cache, name)
     if url is None:
@@ -235,10 +236,13 @@ for _, city in cities_df.iterrows():
     climate_box_not_found += boxes_found
     all_weather_keys |= weather_keys
 
+    cities_parsed += 1
+
 
 bar.finish()
 
 print()
+print(f'cities parsed: {cities_parsed}')
 print(f'elevation not found: {elevation_not_found}')
 print(f'weather box not found: {climate_box_not_found}')
 print('weather keys: ', all_weather_keys)
