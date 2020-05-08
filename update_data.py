@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 from progress.bar import IncrementalBar
+import mwparserfromhell
 
 
 class Cache:
@@ -106,55 +107,74 @@ def extract_elevation(data):
 
 def extract_climate_from_box(data):
     months = (
-        'year',
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-        'yeard',
+    )
+    daily_sunshine_months = (
         'Jand', 'Febd', 'Mard', 'Aprd', 'Mayd', 'Jund', 'Juld', 'Augd', 'Sepd', 'Octd', 'Novd', 'Decd'
     )
     prefix_blacklist = (
         'unit precipitation days',
         'unit rain days',
         'unit snow days',
-        'pages',
-        'page',
-        'time day',
-        'open',
-        'metric first'
+        'Year snow days',
+        'Year rain days',
     )
-    first_item_blacklist = (
-        'accessdate', 'access-date', 'archivedate',
-        'width', 'archive-date', 'time day', 'date'
-    )
-    for line in data.split("\n"):
-        line = line.replace('−', '-')
-        match = re.match(r'\s*\|([^=]+)=\s*(-?[\d\.]+)', line, flags=re.IGNORECASE)
-        if match is not None:
-            prefix = match[1].strip()
-            if prefix in prefix_blacklist:
+
+    keys = set()
+    wikicode = mwparserfromhell.parse(data)
+    for template in wikicode.filter_templates():
+        if template.name != 'Weather box':
+            continue
+
+        for param in template.params:
+            name = param.name.strip()
+            if name in prefix_blacklist:
                 continue
 
-            items = match[1].strip().split(' ')
-            value = match[2]
-            first_item = items[0]
-            if first_item in first_item_blacklist:
+            name = name.split(' ', maxsplit=1)
+            if len(name) == 1:
                 continue
 
-            if first_item not in months:
-                print()
-                print(f'"{match[1]}" "{line}"')
-            # print(match)
+            month, key = name
+            if month.startswith('year'):
+                continue
+
+            value = param.value.strip().replace('−', '-')
+
+            # TODO: assuming "sunshine hours" and "daylight hours" are the same
+            # I don't know whether that's correct
+            if month in daily_sunshine_months:
+                # using 30 for days in month
+                value = str(float(value) * 30)
+                month = month[0:-1]
+
+            if month in months:
+                value = None if value == '' else float(value)
+                # I'm assuming the units are always in the metric system
+                if key.endswith(' C'):
+                    key = key[:-2]
+                if key.endswith(' mm'):
+                    key = key[:-3]                
+
+                keys.add(key)
+
+
+                # print(f'/{month}/{key}/{value}')
+
+    return keys
 
 
 def extract_climate(data):
     weather_boxes = re.findall(r'\{\{Weather box.*?(?:\n\}\}|\}\}\n)', data, re.DOTALL)
-    # for weather in weather_boxes:
-    #     print(weather)
+    keys = set()
+
     if len(weather_boxes) == 0:
-        return 1
+        return (1, keys)
 
     for box in weather_boxes:
-        extract_climate_from_box(box)
-    return 0
+        keys |= extract_climate_from_box(box)
+
+    return (0, keys)
 
 
 def find_city_url(session, cache, city):
@@ -189,13 +209,17 @@ session = requests.Session()
 bar = IncrementalBar('City', max=len(cities_df))
 climate_box_not_found = 0
 elevation_not_found = 0
+all_weather_keys = set()
 for _, city in cities_df.iterrows():
     name = city['city']
     bar.message = name[0:30].ljust(30)
     bar.next()
-    koppen = city['koppen']
 
+    koppen = city['koppen']
     if not koppen.startswith('C'):
+        continue
+
+    if city['country'] == 'United States':
         continue
 
     url = find_city_url(session, cache, name)
@@ -207,7 +231,9 @@ for _, city in cities_df.iterrows():
     # print(cache._path_for(url, params))
 
     elevation_not_found += extract_elevation(data)
-    climate_box_not_found += extract_climate(data)
+    boxes_found, weather_keys = extract_climate(data)
+    climate_box_not_found += boxes_found
+    all_weather_keys |= weather_keys
 
 
 bar.finish()
@@ -215,3 +241,4 @@ bar.finish()
 print()
 print(f'elevation not found: {elevation_not_found}')
 print(f'weather box not found: {climate_box_not_found}')
+print('weather keys: ', all_weather_keys)
