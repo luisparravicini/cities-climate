@@ -3,6 +3,7 @@ import pandas as pd
 import re
 import requests
 from progress.bar import IncrementalBar
+from pathlib import Path
 import mwparserfromhell
 from .cache import HttpCache, DataCache
 from urllib.parse import urljoin, urlparse
@@ -119,19 +120,27 @@ def clean_row(datum):
                datum)
 
 
-def parse_all_temps(data_cache):
+def parse_all_temps(data_cache, results_path):
     print('Collecting temps')
     weather_rows = list()
     data_cache.for_each(lambda x: weather_rows.extend(clean_row(x)))
-    cols = ['City', 'Country', 'Month', 'Avg temp', 'Avg high', 'Avg low',
+    cols = ['Month', 'City', 'Country', 'Avg temp', 'Avg high', 'Avg low',
             'Avg rainy days', 'Avg rainfall', 'Avg snowfall']
     weather_df = pd.DataFrame(weather_rows, columns=cols)
 
-    path = 'weather_info.csv'
-    weather_df.to_csv(path)
-    print(f'Saved temps in "{path}"')
+    weather_df.to_csv(results_path, index=False)
+    print(f'Saved temps in "{results_path}"')
 
 
 data_cache = DataCache('weather.cache')
-#fetch_all_temps(data_cache, min_temp=10, max_temp=None)
-parse_all_temps(data_cache)
+csv_path = Path('weather_info.csv')
+min_temp = 10
+max_temp = None
+if not csv_path.exists():
+    fetch_all_temps(data_cache, min_temp, max_temp)
+    parse_all_temps(data_cache, csv_path)
+else:
+    print(f'using already collected data in "{csv_path}"')
+
+# df = pd.read_csv(csv_path)
+# print(df[(df['Avg low'] >= min_temp) & (df['Avg high'] < 30)].groupby(['City', 'Country']).count())
