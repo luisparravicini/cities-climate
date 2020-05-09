@@ -28,13 +28,7 @@ def parse_cities_data(soup, data):
 
 
 def fetch_cities_data(cache, session, url):
-    url += '&set=metric'
-
     data = list()
-
-    data_cache = DataCache('weather.cache')
-    if data_cache.has(url):
-        return
 
     page_content = cache.get(session, url)
 
@@ -46,14 +40,14 @@ def fetch_cities_data(cache, session, url):
         soup = BeautifulSoup(page_content, 'html5lib')
         parse_cities_data(soup, data)
 
-    data_cache.save_json(url, data)
+    return data
 
 
 def to_bar_message(s):
     return s[0:30].ljust(30)
 
 
-def fetch_month(month, session, cache, min_temp, max_temp):
+def fetch_month(month, session, cache, min_temp, max_temp, data_cache):
     url = 'https://www.weatherbase.com/vacation/step3.php3'
     params = {'month': month, 'low': min_temp, 'hi': max_temp}
 
@@ -85,10 +79,14 @@ def fetch_month(month, session, cache, min_temp, max_temp):
             href = urljoin(url, link['href'])
             if not urlparse(href).path.startswith('/vacation/step5'):
                 continue
+            href += '&set=metric'
 
             bar.message = to_bar_message(link.get_text())
 
-            fetch_cities_data(cache, session, href)
+            if not data_cache.has(url):
+                cities_data = map(lambda x: x.insert(0, month),
+                                  fetch_cities_data(cache, session, href))
+                data_cache.save_json(url, list(cities_data))
 
             # next forces the bar to refresh (it's needed for the message)
             bar.next(0)
@@ -98,15 +96,30 @@ def fetch_month(month, session, cache, min_temp, max_temp):
     bar.finish()
 
 
-session = requests.Session()
-cache = HttpCache('~/download.cache')
-temp_range = (10, None)
-min_temp = to_fahrenheit_int(temp_range[0])
-max_temp = temp_range[1]
-print(f'collecting cities with temperature range: {temp_range[0]}-{temp_range[1]}')
-months = ('January', 'February', 'March', 'April',
-          'May', 'June', 'July', 'August', 'September',
-          'October', 'November', 'December')
-for month in months:
-    fetch_month(month, session, cache, min_temp, max_temp)
-    print()
+def fetch_all_temps(data_cache, min_temp, max_temp):
+    session = requests.Session()
+    cache = HttpCache('~/download.cache')
+    temp_range = (10, None)
+    min_temp = to_fahrenheit_int(temp_range[0])
+    max_temp = temp_range[1]
+    print(f'collecting cities with temperature range: {temp_range[0]}-{temp_range[1]}')
+    months = ('January', 'February', 'March', 'April',
+              'May', 'June', 'July', 'August', 'September',
+              'October', 'November', 'December')
+    for month in months:
+        fetch_month(month, session, cache, min_temp, max_temp, data_cache)
+        print()
+
+
+def parse_temps(data):
+    pass
+
+
+def parse_all_temps(data_cache):
+    print('Parsing temps')
+    data_cache.for_each(parse_temps)
+
+
+data_cache = DataCache('weather.cache')
+fetch_all_temps(data_cache, min_temp=10, max_temp=None)
+parse_all_temps(data_cache)

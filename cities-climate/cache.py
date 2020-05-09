@@ -63,6 +63,12 @@ class DataCache(BaseCache):
     def __init__(self, data_path):
         super().__init__(data_path)
 
+    def for_each(self, processor):
+        for file_path in Path(self.path).rglob('*'):
+            if not file_path.is_file():
+                continue
+            processor(json.loads(self._read(file_path)))
+
     def has(self, key):
         cache_object_path = self._path_for(key)
         return cache_object_path.exists()
