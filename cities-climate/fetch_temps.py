@@ -84,8 +84,9 @@ def fetch_month(month, session, cache, min_temp, max_temp, data_cache):
             bar.message = to_bar_message(link.get_text())
 
             if not data_cache.has(url):
-                cities_data = map(lambda x: x.insert(0, month),
-                                  fetch_cities_data(cache, session, href))
+                cities_data = fetch_cities_data(cache, session, href)
+                for datum in cities_data:
+                    datum.insert(0, month)
                 data_cache.save_json(url, list(cities_data))
 
             # next forces the bar to refresh (it's needed for the message)
@@ -112,7 +113,7 @@ def fetch_all_temps(data_cache, min_temp, max_temp):
 
 
 def parse_temps(data):
-    pass
+    print(data)
 
 
 def parse_all_temps(data_cache):
