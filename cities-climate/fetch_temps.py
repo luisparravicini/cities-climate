@@ -142,16 +142,16 @@ def parse_all_temps(data_cache, results_path):
 
 data_cache = DataCache('weather.cache')
 csv_path = Path('weather_info.csv')
-min_temp = None
-max_temp = None
 if not csv_path.exists():
-    fetch_all_temps(data_cache, min_temp, max_temp)
+    fetch_all_temps(data_cache, min_temp=None, max_temp=None)
     parse_all_temps(data_cache, csv_path)
 else:
     print(f'using already collected data in "{csv_path}"')
 
+min_temp = 10
+max_temp = 26
 df = pd.read_csv(csv_path)
-df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < 27)]
+df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < max_temp)]
 df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].count().sort_values()
 print(df_by_month.to_string())
 
