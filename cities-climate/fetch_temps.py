@@ -11,6 +11,9 @@ import pandas as pd
 
 
 def to_fahrenheit_int(celsius):
+    if celsius is None:
+        return None
+
     return int(celsius * 9 / 5 + 32)
 
 
@@ -91,12 +94,11 @@ def fetch_month(month, session, cache, min_temp, max_temp, data_cache):
             href += '&set=metric'
 
             bar.message = to_bar_message(link.get_text())
-
-            if not data_cache.has(url):
+            if not data_cache.has(href):
                 cities_data = fetch_cities_data(cache, session, href)
                 for datum in cities_data:
                     datum.append(month)
-                data_cache.save_json(url, list(cities_data))
+                data_cache.save_json(href, list(cities_data))
 
             # next forces the bar to refresh (it's needed for the message)
             bar.next(0)
@@ -109,13 +111,12 @@ def fetch_month(month, session, cache, min_temp, max_temp, data_cache):
 def fetch_all_temps(data_cache, min_temp, max_temp):
     session = requests.Session()
     cache = HttpCache('~/download.cache')
-    temp_range = (10, None)
-    min_temp = to_fahrenheit_int(temp_range[0])
-    max_temp = temp_range[1]
-    print(f'collecting cities with temperature range: {temp_range[0]}-{temp_range[1]}')
+    print(f'collecting cities info')
     months = ('January', 'February', 'March', 'April',
               'May', 'June', 'July', 'August', 'September',
               'October', 'November', 'December')
+    min_temp = to_fahrenheit_int(min_temp)
+    max_temp = to_fahrenheit_int(max_temp)
     for month in months:
         fetch_month(month, session, cache, min_temp, max_temp, data_cache)
         print()
@@ -148,8 +149,8 @@ if not csv_path.exists():
 else:
     print(f'using already collected data in "{csv_path}"')
 
-min_temp = 10
-max_temp = 26
+min_temp = 0
+max_temp = 60
 df = pd.read_csv(csv_path)
 df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < max_temp)]
 df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].count().sort_values()
