@@ -9,23 +9,10 @@ from urllib.parse import urljoin, urlparse
 
 
 def to_fahrenheit_int(celsius):
-    return celsius * 9 / 5 + 32
+    return int(celsius * 9 / 5 + 32)
 
 
-def fetch_cities_data(cache, session, url):
-    url += '&set=metric'
-
-    data = list()
-
-    data_cache = DataCache('weather.cache')
-    if data_cache.has(url):
-        return
-
-    page_content = cache.get(session, url)
-    # need to use html5lib as the html is malformed and
-    # it needs a more lenient parser than the default one
-    soup = BeautifulSoup(page_content, 'html5lib')
-
+def parse_cities_data(soup, data):
     # or state if inside USA
     country = soup.find('h1').text.split('-')[-1].strip().capitalize()
 
@@ -38,6 +25,26 @@ def fetch_cities_data(cache, session, url):
         datum = list(map(lambda x: x.text, cells))
         datum.insert(1, country)
         data.append(datum)
+
+
+def fetch_cities_data(cache, session, url):
+    url += '&set=metric'
+
+    data = list()
+
+    data_cache = DataCache('weather.cache')
+    if data_cache.has(url):
+        return
+
+    page_content = cache.get(session, url)
+
+    # In some cases, a country is listed, but following the link returns
+    # an error (also happens when manually navigating usinh a browser)
+    if 'You must first choose a month to find' not in page_content:
+        # need to use html5lib as the html is malformed and
+        # it needs a more lenient parser than the default one
+        soup = BeautifulSoup(page_content, 'html5lib')
+        parse_cities_data(soup, data)
 
     data_cache.save_json(url, data)
 
@@ -93,9 +100,10 @@ def fetch_month(month, session, cache, min_temp, max_temp):
 
 session = requests.Session()
 cache = HttpCache('~/download.cache')
-min_temp = to_fahrenheit_int(10)
-max_temp = None
-print(f'collecting cities with temperature range: {min_temp}-{max_temp}')
+temp_range = (10, None)
+min_temp = to_fahrenheit_int(temp_range[0])
+max_temp = temp_range[1]
+print(f'collecting cities with temperature range: {temp_range[0]}-{temp_range[1]}')
 months = ('January', 'February', 'March', 'April',
           'May', 'June', 'July', 'August', 'September',
           'October', 'November', 'December')
