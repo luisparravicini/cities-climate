@@ -25,7 +25,14 @@ def parse_cities_data(soup, data):
             continue
 
         datum = list(map(lambda x: x.text, cells))
+
+        href = cells[0].find('a')['href']
+        match = re.search(r'\?s=(\d+)', href)
+        id = match[1] if match else None
+        datum.append(id)
+
         datum.insert(1, country)
+
         data.append(datum)
 
 
@@ -88,7 +95,7 @@ def fetch_month(month, session, cache, min_temp, max_temp, data_cache):
             if not data_cache.has(url):
                 cities_data = fetch_cities_data(cache, session, href)
                 for datum in cities_data:
-                    datum.insert(0, month)
+                    datum.append(month)
                 data_cache.save_json(url, list(cities_data))
 
             # next forces the bar to refresh (it's needed for the message)
@@ -124,8 +131,8 @@ def parse_all_temps(data_cache, results_path):
     print('Collecting temps')
     weather_rows = list()
     data_cache.for_each(lambda x: weather_rows.extend(clean_row(x)))
-    cols = ['Month', 'City', 'Country', 'Avg temp', 'Avg high', 'Avg low',
-            'Avg rainy days', 'Avg rainfall', 'Avg snowfall']
+    cols = ['City', 'Country', 'Avg temp', 'Avg high', 'Avg low',
+            'Avg rainy days', 'Avg rainfall', 'Avg snowfall', 'City id', 'Month']
     weather_df = pd.DataFrame(weather_rows, columns=cols)
 
     weather_df.to_csv(results_path, index=False)
@@ -142,5 +149,10 @@ if not csv_path.exists():
 else:
     print(f'using already collected data in "{csv_path}"')
 
-# df = pd.read_csv(csv_path)
-# print(df[(df['Avg low'] >= min_temp) & (df['Avg high'] < 30)].groupby(['City', 'Country']).count())
+df = pd.read_csv(csv_path)
+df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < 30)]
+df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].count().sort_values()
+print(df_by_month.to_string())
+
+# print(df.to_string())
+#print(df[df['City'] == 'Arakoon'].to_string())
