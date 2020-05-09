@@ -134,6 +134,7 @@ def parse_all_temps(data_cache, results_path):
     cols = ['City', 'Country', 'Avg temp', 'Avg high', 'Avg low',
             'Avg rainy days', 'Avg rainfall', 'Avg snowfall', 'City id', 'Month']
     weather_df = pd.DataFrame(weather_rows, columns=cols)
+    weather_df.drop_duplicates(inplace=True)
 
     weather_df.to_csv(results_path, index=False)
     print(f'Saved temps in "{results_path}"')
@@ -141,7 +142,7 @@ def parse_all_temps(data_cache, results_path):
 
 data_cache = DataCache('weather.cache')
 csv_path = Path('weather_info.csv')
-min_temp = 10
+min_temp = None
 max_temp = None
 if not csv_path.exists():
     fetch_all_temps(data_cache, min_temp, max_temp)
@@ -150,9 +151,9 @@ else:
     print(f'using already collected data in "{csv_path}"')
 
 df = pd.read_csv(csv_path)
-df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < 30)]
+df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < 27)]
 df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].count().sort_values()
 print(df_by_month.to_string())
 
 # print(df.to_string())
-#print(df[df['City'] == 'Arakoon'].to_string())
+# print(df[df['City'] == 'Arakoon'].to_string())
