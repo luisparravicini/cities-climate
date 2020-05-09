@@ -6,6 +6,7 @@ from progress.bar import IncrementalBar
 import mwparserfromhell
 from .cache import HttpCache, DataCache
 from urllib.parse import urljoin, urlparse
+import pandas as pd
 
 
 def to_fahrenheit_int(celsius):
@@ -112,15 +113,25 @@ def fetch_all_temps(data_cache, min_temp, max_temp):
         print()
 
 
-def parse_temps(data):
-    print(data)
+def clean_row(datum):
+    return map(lambda row:
+               map(lambda x: re.sub(r' °C| mm|---', '', x), row),
+               datum)
 
 
 def parse_all_temps(data_cache):
-    print('Parsing temps')
-    data_cache.for_each(parse_temps)
+    print('Collecting temps')
+    weather_rows = list()
+    data_cache.for_each(lambda x: weather_rows.extend(clean_row(x)))
+    cols = ['City', 'Country', 'Month', 'Avg temp', 'Avg high', 'Avg low',
+            'Avg rainy days', 'Avg rainfall', 'Avg snowfall']
+    weather_df = pd.DataFrame(weather_rows, columns=cols)
+
+    path = 'weather_info.csv'
+    weather_df.to_csv(path)
+    print(f'Saved temps in "{path}"')
 
 
 data_cache = DataCache('weather.cache')
-fetch_all_temps(data_cache, min_temp=10, max_temp=None)
+#fetch_all_temps(data_cache, min_temp=10, max_temp=None)
 parse_all_temps(data_cache)
