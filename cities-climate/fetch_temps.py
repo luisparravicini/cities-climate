@@ -147,7 +147,7 @@ if not csv_path.exists():
     fetch_all_temps(data_cache, min_temp=None, max_temp=None)
     parse_all_temps(data_cache, csv_path)
 else:
-    print(f'using already collected data in "{csv_path}"')
+    print(f'usinggit collected data in "{csv_path}"')
 
 min_temp = 0
 max_temp = 60
