@@ -177,7 +177,6 @@ df = pd.read_csv(csv_path)
 
 df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < max_temp)]
 df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].count().sort_values()
-print(df_by_month.to_string())
-print(df_by_month)
 
-#print(df[df['City'] == 'Los Mochis'].to_string())
+print(df_by_month.to_string())
+
