@@ -146,11 +146,11 @@ def parse_all_temps(data_cache, results_path):
             'Avg rainy days', 'Avg rainfall', 'Avg snowfall', 'City id',
             'Month']
     weather_df = pd.DataFrame(weather_rows, columns=cols)
-    weather_df.drop_duplicates(inplace=True)
 
-    weather_df.to_csv(results_path, index=False)
     weather_df['Avg temp'] = (weather_df['Avg low'] + weather_df['Avg high']) / 2
     weather_df = weather_df.drop_duplicates(['City id', 'Month'])
+
+    weather_df.to_csv(results_path, index=False)
     print(f'Saved temps in "{results_path}"')
 
 
@@ -171,4 +171,4 @@ df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].cou
 print(df_by_month.to_string())
 
 #print(df.to_string())
-#print(df[df['City'] == 'Arakoon'].to_string())
+#print(df[df['City'] == 'Los Mochis'].to_string())
