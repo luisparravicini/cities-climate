@@ -8,6 +8,7 @@ import mwparserfromhell
 from .cache import HttpCache, DataCache
 from urllib.parse import urljoin, urlparse
 import pandas as pd
+import argparse
 
 
 def to_fahrenheit_int(celsius):
@@ -154,6 +155,16 @@ def parse_all_temps(data_cache, results_path):
     print(f'Saved temps in "{results_path}"')
 
 
+parser = argparse.ArgumentParser(description='List cities temperatures')
+parser.add_argument('--max', dest='max', type=int,
+                    help='maximum (including) temperature')
+parser.add_argument('--min', dest='min', type=int,
+                    help='mininum (including) temperature')
+
+args = parser.parse_args()
+min_temp = args.min or -200
+max_temp = args.max or 200
+
 data_cache = DataCache('weather.cache')
 csv_path = Path('weather_info.csv')
 if not csv_path.exists():
@@ -162,13 +173,11 @@ if not csv_path.exists():
 else:
     print(f'using collected data in "{csv_path}"')
 
-min_temp = 0
-max_temp = 60
 df = pd.read_csv(csv_path)
 
 df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < max_temp)]
 df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].count().sort_values()
 print(df_by_month.to_string())
+print(df_by_month)
 
-#print(df.to_string())
 #print(df[df['City'] == 'Los Mochis'].to_string())
