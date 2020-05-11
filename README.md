@@ -1,7 +1,11 @@
+This repo has several scripts related to cities temperatures:
+
+## Finding Köppen climate classification
+
 Given a list of cities with their latitude and longitude, the script finds (approximately) the city [Koppen climate classification](https://en.wikipedia.org/wiki/K%C3%B6ppen_climate_classification).
 To do this it uses a "world map" divided in 0.5 degree zones and finds the nearest zone for a city position.
 
-## Running
+### Running
 
 Install dependencies:
 
@@ -15,10 +19,26 @@ Run the script:
 
 It initially reads the cities list from `data/` and then it will start saving all the intermediate (and final) data in `cities.csv`.
 
-
-
-## Data sources
+### Data sources
 
 * [Cities list from simplemaps](https://simplemaps.com/data/world-cities)
 * [Koppen climate map](http://koeppen-geiger.vu-wien.ac.at/data/Koeppen-Geiger-ASCII.zip) from [World maps of Köppen-Geiger climate classification](http://koeppen-geiger.vu-wien.ac.at/present.htm). That file has a resolution of 0.5 degree and for the 50-year period 1951-2000.
+
+
+## List of cities within a temperature range
+
+Given a temperature range it lists cities worldwide and the amount of months that their monthly average temperature falls within this range.
+
+### Running
+
+Install dependencies:
+
+`pip install --user -r requeriments.txt`
+
+
+Run the script:
+
+`python -m cities-climate.fetch_temps --min MIN_TEMP --max MAX_TEMP`
+
+It initially scrapes data from WeatherBase and builds a local cache, so the script can resume from where it left off if interrupted. After downloading all the data, it saves a .csv file with all the data.
 
