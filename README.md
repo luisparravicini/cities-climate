@@ -2,7 +2,7 @@ This repo has several scripts related to cities temperatures:
 
 ## Finding Köppen climate classification
 
-Given a list of cities with their latitude and longitude, the script finds (approximately) the city [Koppen climate classification](https://en.wikipedia.org/wiki/K%C3%B6ppen_climate_classification).
+Given a list of cities with their latitude and longitude, the script finds (approximately) the city's [Koppen climate classification](https://en.wikipedia.org/wiki/K%C3%B6ppen_climate_classification).
 To do this it uses a "world map" divided in 0.5 degree zones and finds the nearest zone for a city position.
 
 ### Running
@@ -27,7 +27,7 @@ It initially reads the cities list from `data/` and then it will start saving al
 
 ## List of cities within a temperature range
 
-Given a temperature range it lists cities worldwide and the amount of months that their monthly average temperature falls within this range.
+Given a temperature range it lists cities having at least one month where their monthly average temperature falls within this range.
 
 ### Running
 
