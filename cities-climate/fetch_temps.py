@@ -122,22 +122,35 @@ def fetch_all_temps(data_cache, min_temp, max_temp):
         print()
 
 
-def clean_row(datum):
-    return map(lambda row:
-               map(lambda x: re.sub(r' °C| mm|---', '', x), row),
-               datum)
+def clean_row(row):
+    row = list(map(lambda x: re.sub(r'\s*(?:°C|mm|---)', '', x), row))
+    for i in [2, 3, 4, 5, 6, 7]:
+        match = re.search(r'([\d\.-]+)\s+cm', row[i])
+        if match is not None:
+            row[i] = float(match[1]) * 10
+        else:
+            row[i] = None if row[i] == '' else float(row[i])
+    return row
+
+
+def clean_rows(datum):
+    return map(lambda row: clean_row(row), datum)
 
 
 def parse_all_temps(data_cache, results_path):
     print('Collecting temps')
     weather_rows = list()
-    data_cache.for_each(lambda x: weather_rows.extend(clean_row(x)))
+    data_cache.for_each(lambda x: weather_rows.extend(clean_rows(x)))
+
     cols = ['City', 'Country', 'Avg temp', 'Avg high', 'Avg low',
-            'Avg rainy days', 'Avg rainfall', 'Avg snowfall', 'City id', 'Month']
+            'Avg rainy days', 'Avg rainfall', 'Avg snowfall', 'City id',
+            'Month']
     weather_df = pd.DataFrame(weather_rows, columns=cols)
     weather_df.drop_duplicates(inplace=True)
 
     weather_df.to_csv(results_path, index=False)
+    weather_df['Avg temp'] = (weather_df['Avg low'] + weather_df['Avg high']) / 2
+    weather_df = weather_df.drop_duplicates(['City id', 'Month'])
     print(f'Saved temps in "{results_path}"')
 
 
@@ -147,14 +160,15 @@ if not csv_path.exists():
     fetch_all_temps(data_cache, min_temp=None, max_temp=None)
     parse_all_temps(data_cache, csv_path)
 else:
-    print(f'usinggit collected data in "{csv_path}"')
+    print(f'using collected data in "{csv_path}"')
 
 min_temp = 0
 max_temp = 60
 df = pd.read_csv(csv_path)
+
 df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < max_temp)]
 df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].count().sort_values()
 print(df_by_month.to_string())
 
-# print(df.to_string())
-# print(df[df['City'] == 'Arakoon'].to_string())
+#print(df.to_string())
+#print(df[df['City'] == 'Arakoon'].to_string())
