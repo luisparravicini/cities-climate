@@ -7,7 +7,6 @@ from pathlib import Path
 import mwparserfromhell
 from .cache import HttpCache, DataCache
 from urllib.parse import urljoin, urlparse
-import pandas as pd
 import argparse
 
 
