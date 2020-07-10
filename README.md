@@ -38,3 +38,15 @@ Run the script:
 
 It initially scrapes data from WeatherBase and builds a local cache, so the script can resume from where it left off if interrupted. After downloading all the data, it saves a .csv file with all the data.
 
+## List of cities within a temperature range (2)
+
+Given a temperature range it lists cities having average monthly temperature in that range for all the year.
+
+### Running
+
+Run the script:
+
+`python -m cities-climate.wikipedia_temps --min MIN_TEMP --max MAX_TEMP`
+
+This script uses data from a wikipedia article listing average temps for several cities around the world. After downloading and parsing, the data is stored in a csv file.
+
