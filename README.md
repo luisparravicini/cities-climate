@@ -1,4 +1,9 @@
-This repo has several scripts related to cities temperatures:
+This repo has several scripts, all related to cities temperatures, maybe some overlapping another's functionality:
+
+For all the scripts you need first to install dependencies with:
+
+`pip install --user -r requeriments.txt`
+
 
 ## Finding Köppen climate classification
 
@@ -6,10 +11,6 @@ Given a list of cities with their latitude and longitude, the script finds (appr
 To do this it uses a "world map" divided in 0.5 degree zones and finds the nearest zone for a city position.
 
 ### Running
-
-Install dependencies:
-
-`pip install --user -r requeriments.txt`
 
 Download the data files (the ones listed in *Data Sources*) and put them in `data/`
 
@@ -30,11 +31,6 @@ It initially reads the cities list from `data/` and then it will start saving al
 Given a temperature range it lists cities having at least one month where their monthly average temperature falls within this range.
 
 ### Running
-
-Install dependencies:
-
-`pip install --user -r requeriments.txt`
-
 
 Run the script:
 
