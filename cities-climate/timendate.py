@@ -50,7 +50,12 @@ def parse_city(name, data):
     if not m:
         print("\ncouldn't find temps!")
         return None
-    datum['temps'] = json.loads(m[1])
+    temps = json.loads(m[1])
+    temps_data = temps['months']
+    if len(temps_data) != 12:
+        print(f"\nunexpected temps size: {len(temps_data)}")
+        return None
+    datum['temps'] = temps
 
     m = re.search(r'TAD.lon=([\d\.-]+);TAD.lat=([\d\.-]+);', data)
     if not m:
