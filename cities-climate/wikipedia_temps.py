@@ -19,7 +19,7 @@ def fetch_all_temps(data_cache, csv_path, months_names):
 
     all_temps = list()
     for table in soup.find_all('table'):
-        for row in soup.find_all('tr'):
+        for row in table.find_all('tr'):
             cells = row.find_all('td')
             if len(cells) != 16:
                 continue
