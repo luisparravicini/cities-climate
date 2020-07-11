@@ -1,4 +1,4 @@
-This repo has several scripts, all related to cities temperatures, maybe some overlapping another's functionality:
+This repo is an assorted collection of scripts relating to collecting and filtering cities' temperatures from around the world, maybe some overlapping another's functionality.
 
 For all the scripts you need first to install dependencies with:
 
