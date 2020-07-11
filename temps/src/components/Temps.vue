@@ -14,6 +14,21 @@
 </div>
 
     <table class='temps'>
+        <tr>
+            <th>City</th>
+            <th>Jan</th>
+            <th>Feb</th>
+            <th>Mar</th>
+            <th>Apr</th>
+            <th>May</th>
+            <th>Jun</th>
+            <th>Jul</th>
+            <th>Aug</th>
+            <th>Sep</th>
+            <th>Oct</th>
+            <th>Nov</th>
+            <th>Dec</th>
+        </tr>
         <tr v-for="(row, row_index) in city_temps" :key="row_index" v-show="citySelected(row)">
             <td class='city_name'>{{ row.city.name }}</td>
             <td :style="getStyle(avg_temp)" class='temp' v-for="(avg_temp, index) in row.temps" :key="index">
@@ -167,7 +182,7 @@ export default {
         margin-right: auto;
         border-collapse: collapse;
     }
-    .temps td {
+    .temps td, .temps th {
         padding: 0.2em;
         border: 1px solid #a0a0a0;
     }
