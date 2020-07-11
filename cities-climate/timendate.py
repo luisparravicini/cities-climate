@@ -6,7 +6,6 @@ from progress.bar import IncrementalBar
 from pathlib import Path
 from .cache import HttpCache, DataCache
 from urllib.parse import urljoin, urlparse, urlunparse
-import argparse
 import json
 
 
@@ -43,6 +42,20 @@ def fetch_countries(cache, session, urls):
     return cities_urls
 
 
+def parse_temps(temps):
+    months_names = ["Jan", "Feb", "Mar", "Apr", "May",
+                "Jun", "Jul", "Aug", "Sep", "Oct",
+                "Nov", "Dec"]
+    temps_data = list()
+    for month in months_names:
+        data = next(x for x in temps if x['name'] == month)
+        data = list(map(lambda x: data[x],
+                        ['min', 'max', 'mean', 'prec']))
+        temps_data.append(data)
+
+    return temps_data
+
+
 def parse_city(name, data):
     datum = {}
 
@@ -50,18 +63,17 @@ def parse_city(name, data):
     if not m:
         print("\ncouldn't find temps!")
         return None
-    temps = json.loads(m[1])
-    temps_data = temps['months']
-    if len(temps_data) != 12:
-        print(f"\nunexpected temps size: {len(temps_data)}")
+    temps = json.loads(m[1])['months']
+    if len(temps) != 12:
+        print(f"\nunexpected temps size: {len(temps)}")
         return None
-    datum['temps'] = temps
+    datum['temps'] = parse_temps(temps)
 
     m = re.search(r'TAD.lon=([\d\.-]+);TAD.lat=([\d\.-]+);', data)
     if not m:
         print("\ncouldn't find pos")
         return None
-    datum['pos'] = { 'lat': m[1], 'lng': m[2] }
+    datum['pos'] = [float(m[1]), float(m[2])]
     
     soup = BeautifulSoup(data, 'html.parser')
     m = re.search(' in (.*?)$', soup.find('title').text)
@@ -72,7 +84,8 @@ def parse_city(name, data):
     if len(name) < 2:
         print(f"\nunknown name format: '{name}'")
         return None
-    datum['name'] = { 'city': name[0], 'country': name[-1] }
+    datum['name'] = name[0]
+    datum['country'] = name[-1]
 
     return datum
 
@@ -91,12 +104,22 @@ def fetch_cities(cache, session, urls):
         datum = parse_city(name, data)
         if datum is not None:
             cities_data.append(datum)
-            # print(datum)
 
         bar.next()
 
     bar.finish()
-    return data
+    return cities_data
+
+
+def process_data(data):
+    countries = list()
+    for city in data['cities']:
+        country = city['country']
+        if country not in countries:
+            countries.append(country)
+        city['country'] = countries.index(country)
+
+    data['countries'] = countries
 
 
 def fetch_all_temps(data_cache):
@@ -124,52 +147,27 @@ def fetch_all_temps(data_cache):
 
     cities_urls = fetch_countries(cache, session, links)
     data = fetch_cities(cache, session, cities_urls)
+    data = { 'cities': data }
+    process_data(data)
 
+    return data
+
+
+def save_data(data, json_path):
+    print(f'storing data at {json_path}')
+    with open(json_path, 'w') as file:
+        file.write(json.dumps(data))
 
 
 def clean_rows(datum):
     return map(lambda row: clean_row(row), datum)
 
 
-def parse_all_temps(data_cache, results_path):
-    print('Collecting temps')
-    weather_rows = list()
-    data_cache.for_each(lambda x: weather_rows.extend(clean_rows(x)))
-
-    cols = ['City', 'Country', 'Avg temp', 'Avg high', 'Avg low',
-            'Avg rainy days', 'Avg rainfall', 'Avg snowfall', 'City id',
-            'Month']
-    weather_df = pd.DataFrame(weather_rows, columns=cols)
-
-    weather_df['Avg temp'] = (weather_df['Avg low'] + weather_df['Avg high']) / 2
-    weather_df = weather_df.drop_duplicates(['City id', 'Month'])
-
-    weather_df.to_csv(results_path, index=False)
-    print(f'Saved temps in "{results_path}"')
-
-
-parser = argparse.ArgumentParser(description='List cities temperatures')
-parser.add_argument('--max', dest='max', type=int,
-                    help='maximum (including) temperature')
-parser.add_argument('--min', dest='min', type=int,
-                    help='mininum (including) temperature')
-
-args = parser.parse_args()
-min_temp = args.min or -200
-max_temp = args.max or 200
-
 data_cache = DataCache('timendate.cache')
-csv_path = Path('timendate.csv')
-if not csv_path.exists():
-    fetch_all_temps(data_cache)
-    parse_all_temps(data_cache, csv_path)
+json_path = Path('temps/src/assets/temps.json')
+if not json_path.exists():
+    data = fetch_all_temps(data_cache)
+    save_data(data, json_path)
 else:
-    print(f'using collected data in "{csv_path}"')
-
-df = pd.read_csv(csv_path)
-
-df_temp_range = df[(df['Avg low'] >= min_temp) & (df['Avg high'] < max_temp)]
-df_by_month = df_temp_range.groupby(['City id', 'City', 'Country'])['Month'].count().sort_values()
-
-print(df_by_month.to_string())
+    print(f'data already exists at "{json_path}"')
 

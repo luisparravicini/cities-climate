@@ -53,3 +53,17 @@ This script uses data from a wikipedia article listing average temps for several
 There's also a small vue web app that uses this info to show the list of cities within certain range, to run it:
 
 `cd temps; npm run serve`
+
+## List of cities within a temperature range (3)
+
+Fetches data from the site timendate and saves data from each available city (monthly average/min/max).
+
+### Running
+
+Run the script:
+
+`python -m cities-climate.timendate`
+
+After fetching the data for each city, it's stored in a json file to be used by the vue webapp in `temps/`. To run that webapp:
+
+`cd temps; npm run serve`
