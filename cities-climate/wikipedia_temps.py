@@ -5,6 +5,7 @@ import requests
 from pathlib import Path
 from .cache import HttpCache, DataCache
 import numpy as np
+import json
 import argparse
 
 
@@ -53,6 +54,22 @@ def fetch_all_temps(data_cache, csv_path, months_names):
     print(f'saved temps in "{csv_path}"')
 
 
+def save_data(df, months_names, path):
+    data = list()
+    for _index, row in df.iterrows():
+        datum = dict()
+        datum['city'] = {
+            'name': row['City'],
+            'country': row['Country'],
+        }
+        datum['temps'] = list(map(lambda x: row[x], months_names))
+        data.append(datum)
+
+    with open(path, 'w') as file:
+        file.write(json.dumps(data))
+    print(f'saved json data in "{path}"')
+
+
 parser = argparse.ArgumentParser(description='List cities temperatures')
 parser.add_argument('--max', dest='max', type=int,
                     help='maximum (including) temperature')
@@ -73,6 +90,7 @@ else:
     print(f'using collected data in "{csv_path}"')
 
 df = pd.read_csv(csv_path)
+save_data(df, months_names, 'temps/src/assets/temps.json')
 
 filter = [df[month].between(min_temp, max_temp) for month in months_names]
-print(df[np.logical_and.reduce(filter)].to_html())
+print(df[np.logical_and.reduce(filter)])
