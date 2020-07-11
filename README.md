@@ -48,5 +48,8 @@ Run the script:
 
 `python -m cities-climate.wikipedia_temps --min MIN_TEMP --max MAX_TEMP`
 
-This script uses data from a wikipedia article listing average temps for several cities around the world. After downloading and parsing, the data is stored in a json file.
+This script uses data from a wikipedia article listing average temps for several cities around the world. After downloading and parsing, the data is stored in a csv file.
 
+There's also a small vue web app that uses this info to show the list of cities within certain range, to run it:
+
+`cd temps; npm run serve`
