@@ -1,12 +1,27 @@
 <template>
+<div>    
+
+<div class='slider'>
+  <p>{{min_temp}}</p>
+  <input type="range" id="min_temp" name="min_temp" min="-60" max="60" v-model="min_temp">
+  <label for="volume">Min</label>
+</div>
+
+<div class='slider'>
+  <p>{{max_temp}}</p>
+  <input type="range" id="max_temp" name="max_temp" min="-60" max="60" v-model="max_temp">
+  <label for="volume">Max</label>
+</div>
+
     <table class='temps'>
-        <tr v-for="(row, row_index) in city_temps" :key="row_index">
+        <tr v-for="(row, row_index) in city_temps" :key="row_index" v-show="citySelected(row)">
             <td class='city_name'>{{ row.city.name }}</td>
             <td :style="getStyle(avg_temp)" class='temp' v-for="(avg_temp, index) in row.temps" :key="index">
                 {{ avg_temp }}
             </td>
         </tr>
     </table>
+</div>
 </template>
 
 <script>
@@ -115,7 +130,10 @@ export default {
   name: 'Temps',
   data: function() {
     return {
+      min_temp: 15,
+      max_temp: 25,
       city_temps: json,
+
       getStyle: temp => {
         let index = Math.trunc(temp) - minColorTemp;
         if (index > colors.length - 1)
@@ -129,6 +147,13 @@ export default {
             styles += `;color:${colorRow[1]}`;
 
         return styles;
+      },
+
+      citySelected: city => {
+        let selected = city.temps.every(temp => {
+            return (temp >= this.min_temp && temp <= this.max_temp);
+        });
+        return selected;
       }
     }; 
   }
@@ -148,4 +173,7 @@ export default {
     }
     .city_name { text-align: left; }
     .temp { text-align: center; }
+    .slider p {
+        display: inline-block;
+    }
 </style>
