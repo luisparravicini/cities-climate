@@ -1,15 +1,13 @@
 <template>
 <div>    
 
-<div class='slider'>
-  <p>{{min_temp}}</p>
-  <input type="range" id="min_temp" name="min_temp" min="-60" max="60" v-model="min_temp">
+<div>
+  <input type="number" id="min_temp" name="min_temp" min="-60" max="60" v-model="min_temp">
   <label for="volume">Min</label>
 </div>
 
-<div class='slider'>
-  <p>{{max_temp}}</p>
-  <input type="range" id="max_temp" name="max_temp" min="-60" max="60" v-model="max_temp">
+<div>
+  <input type="number" id="max_temp" name="max_temp" min="-60" max="60" v-model="max_temp">
   <label for="volume">Max</label>
 </div>
 
@@ -29,10 +27,15 @@
             <th>Nov</th>
             <th>Dec</th>
         </tr>
-        <tr v-for="(row, row_index) in city_temps" :key="row_index" v-show="citySelected(row)">
-            <td class='city_name'>{{ row.city.name }}</td>
-            <td :style="getStyle(avg_temp)" class='temp' v-for="(avg_temp, index) in row.temps" :key="index">
-                {{ avg_temp }}
+        <tr v-for="(city, city_index) in city_temps.cities" :key="city_index" v-show="citySelected(city)">
+            <td class='city_name'>{{ city.name }}</td>
+            <td :style="getStyle(temps)" class='temp' v-for="(temps, index) in city.temps" :key="index">
+                {{ temps[0] }}
+                <br/>
+                {{ temps[2] }}
+                <br/>
+                {{ temps[1] }}
+                <br/>
             </td>
         </tr>
     </table>
@@ -150,7 +153,8 @@ export default {
       city_temps: json,
 
       getStyle: temp => {
-        let index = Math.trunc(temp) - minColorTemp;
+        let meanTempIndex = 2;
+        let index = Math.trunc(temp[meanTempIndex]) - minColorTemp;
         if (index > colors.length - 1)
             index = colors.length - 1;
         if (index < 0)
@@ -188,7 +192,4 @@ export default {
     }
     .city_name { text-align: left; }
     .temp { text-align: center; }
-    .slider p {
-        display: inline-block;
-    }
 </style>
