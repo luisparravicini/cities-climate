@@ -140,6 +140,7 @@ let colors = [
     ['#0D0000', '#FFFFFF'],
 ];
 let minColorTemp = -30;
+let meanTempIndex = 2;
 
 
 import json from "@/assets/temps.json";
@@ -153,7 +154,6 @@ export default {
       city_temps: json,
 
       getStyle: temp => {
-        let meanTempIndex = 2;
         let index = Math.trunc(temp[meanTempIndex]) - minColorTemp;
         if (index > colors.length - 1)
             index = colors.length - 1;
@@ -169,8 +169,9 @@ export default {
       },
 
       citySelected: city => {
-        let selected = city.temps.every(temp => {
-            return (temp >= this.min_temp && temp <= this.max_temp);
+        let selected = city.temps.every(temps => {
+            let t = temps[meanTempIndex];
+            return (t >= this.min_temp && t <= this.max_temp);
         });
         return selected;
       }
