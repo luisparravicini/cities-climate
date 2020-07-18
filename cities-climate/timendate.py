@@ -49,7 +49,7 @@ def parse_temps(temps):
     temps_data = list()
     for month in months_names:
         data = next(x for x in temps if x['name'] == month)
-        data = list(map(lambda x: data[x],
+        data = list(map(lambda x: data.get(x, None),
                         ['min', 'max', 'mean', 'prec']))
         temps_data.append(data)
 
@@ -91,6 +91,7 @@ def parse_city(name, data):
 
 
 def fetch_cities(cache, session, urls):
+    print(f'fetching cities'' data')
     cities_data = list()
     bar = IncrementalBar('fetching', max=len(urls))
     for url in urls:
@@ -146,6 +147,7 @@ def fetch_all_temps(data_cache):
             links.append(href)
 
     cities_urls = fetch_countries(cache, session, links)
+
     data = fetch_cities(cache, session, cities_urls)
     data = { 'cities': data }
     process_data(data)
